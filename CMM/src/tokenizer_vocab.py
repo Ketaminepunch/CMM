@@ -35,7 +35,11 @@ def load_vocab(path: str) -> dict[int, str]:
 
 
 def token_to_bytes(token_str: str) -> bytes:
-    return bytes(BYTE_DECODER[c] for c in token_str)
+    return bytes([BYTE_DECODER[c] for c in token_str])
 
 
 def decode_ids(ids: list[int], vocab: dict[int, str]) -> str:
+    final = b""
+    for id in ids:
+        final += token_to_bytes(vocab[id])
+    return final.decode("utf-8")
