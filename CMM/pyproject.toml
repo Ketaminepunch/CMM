@@ -1,0 +1,22 @@
+[project]
+name = "call-me-maybe"
+version = "0.1.0"
+description = "Function calling for small LLMs via constrained decoding"
+requires-python = ">=3.10"
+dependencies = [
+    "pydantic>=2.0",
+    "numpy>=1.24",
+    "llm-sdk",
+]
+
+[tool.uv]
+package = false
+
+[tool.uv.sources]
+llm-sdk = { path = "llm_sdk", editable = true }
+
+[tool.mypy]
+exclude = ["llm_sdk/", "tests/", "\\.venv/"]
+
+[tool.flake8]
+max-line-length = 100
