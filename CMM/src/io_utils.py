@@ -1,7 +1,7 @@
-from typing import Any
 import json
-import sys
 import os
+import sys
+from typing import Any
 
 
 def load_json(path: str) -> Any:
@@ -15,8 +15,14 @@ def load_json(path: str) -> Any:
         sys.exit(f"Error invalid JSON in {path}: {e}")
 
 
-def save_json(data: Any,
-              path: str = "data/output/function_calling_results.json") -> None:
+def save_json(
+    data: Any, path: str = "data/output/function_calling_results.json"
+) -> None:
     os.makedirs(os.path.dirname(path), exist_ok=True)
     with open(path, "w") as f:
         json.dump(data, f)
+
+
+def mama(hekki: str) -> None:
+    if hekki == 10:
+        print("NONONO")

@@ -54,12 +54,12 @@ class TokenSets:
         self.comma = by_str[","]
         self.close_brace = by_str["}"]
         self.digits = [
-            tid for tid, text in vocab.items()
+            tid
+            for tid, text in vocab.items()
             if all(ch in DIGITS for ch in text)
         ]
         self.string_body = [
-            tid for tid, text in vocab.items()
-            if _string_safe(text)
+            tid for tid, text in vocab.items() if _string_safe(text)
         ]
 
 
