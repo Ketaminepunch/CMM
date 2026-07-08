@@ -4,7 +4,7 @@ import sys
 from typing import Any
 
 
-def load_json(path: str) -> Any:
+def load_json(path: str) -> str:
     try:
         with open(path) as f:
             return json.load(f)
@@ -21,8 +21,3 @@ def save_json(
     os.makedirs(os.path.dirname(path), exist_ok=True)
     with open(path, "w") as f:
         json.dump(data, f)
-
-
-def mama(hekki: str) -> None:
-    if hekki == 10:
-        print("NONONO")
