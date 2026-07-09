@@ -6,3 +6,4 @@ __pycache__/
 *.egg-info/
 data/output/
 .DS_Store
+CLAUDE.md
