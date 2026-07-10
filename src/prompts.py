@@ -9,7 +9,7 @@ def build_function_list(definitions: list[FunctionDefinition]) -> str:
         for key, schema in defn.parameters.items():
             param_parts.append(f"{key}: {schema.type}")
         param_str = ",".join(param_parts)
-        lines.append(f"{defn.name}({param_str}) :{defn.description}")
+        lines.append(f"{defn.name}({param_str}):{defn.description}")
     return "\n".join(lines)
 
 
