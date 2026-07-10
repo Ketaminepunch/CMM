@@ -55,7 +55,7 @@ def walk_trie(sdk: Small_LLM_Model, ids: list[int], trie: Trie) -> str:
 
 
 def run_fsm(
-    sdk: Small_LLM_Model, ids: list[int], fsm: TokenFSM, max_tokens: int = 50
+    sdk: Small_LLM_Model, ids: list[int], fsm: TokenFSM, max_tokens: int = 120
 ) -> list[int]:
     """
     Runs the FSM on the given ids and returns the resulting ids.

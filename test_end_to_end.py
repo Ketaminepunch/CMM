@@ -3,11 +3,9 @@ End-to-end smoke test for decode_function_call against the real example
 prompts/functions. Not part of the graded submission (per subject p.8,
 throwaway test programs are expected, not graded).
 
-Since prompts.py doesn't exist yet, this hand-writes a small few-shot
-preamble so the model has *some* grounding for both function selection
-and argument extraction - real prompt engineering is a separate,
-later piece of work. The point here is only to confirm decode_function_call
-itself produces valid, parseable JSON end to end.
+Now drives the real src/prompts.py (build_preamble/build_prompt) instead
+of a hand-written preamble, so this also exercises prompts.py's dynamic,
+schema-agnostic preamble construction end to end, not just decoder.py.
 
 Run with: uv run python test_end_to_end.py
 """
@@ -25,21 +23,8 @@ from src.decoder import (
 from src.grammar import TokenSets
 from src.io_utils import load_json
 from src.models import FunctionDefinitionList
+from src.prompts import build_preamble, build_prompt
 from src.tokenizer_vocab import decode_ids, load_vocab
-
-FEW_SHOT_PREAMBLE = (
-    "Functions available:\n"
-    "fn_add_numbers(a: number, b: number): Add two numbers together and "
-    "return their sum.\n"
-    "fn_greet(name: string): Generate a greeting message for a person by "
-    "name.\n"
-    "fn_reverse_string(s: string): Reverse a string and return the "
-    "reversed result.\n\n"
-    "Question: What is the sum of 7 and 8?\n"
-    'Answer: {"name": "fn_add_numbers", "parameters": {"a": 7, "b": 8}}\n\n'
-    "Question: Greet mario.\n"
-    'Answer: {"name": "fn_greet", "parameters": {"name": "mario"}}\n\n'
-)
 
 
 def main() -> None:
@@ -52,6 +37,10 @@ def main() -> None:
     name_trie, name_to_def = build_function_trie(sdk, definitions)
     bool_trie = build_bool_trie(sdk)
 
+    preamble = build_preamble(definitions)
+    print("=== PREAMBLE (built once) ===")
+    print(preamble)
+
     raw_prompts = load_json("./data/input/function_calling_tests.json")
     prompts = [item["prompt"] for item in raw_prompts]
 
@@ -59,7 +48,7 @@ def main() -> None:
         print("\n" + "=" * 60)
         print(f"PROMPT: {prompt}")
 
-        full_prompt = FEW_SHOT_PREAMBLE + f"Question: {prompt}\nAnswer: "
+        full_prompt = build_prompt(preamble, prompt)
         ids: list[int] = sdk.encode(full_prompt).tolist()[0]
         start = len(ids)
 

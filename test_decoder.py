@@ -8,7 +8,6 @@ Run with: uv run python test_decoder.py
 """
 
 from llm_sdk import Small_LLM_Model
-
 from src.decoder import (
     build_bool_trie,
     build_function_trie,
@@ -35,7 +34,9 @@ def test_masked_argmax() -> None:
     scores = [1.0, 5.0, 2.0, 9.0, 0.0]
     legal_ids = [0, 2, 4]  # index 3 (the real max) is NOT legal
     chosen = masked_argmax(scores, legal_ids)
-    assert chosen == 2, f"expected 2 (score 2.0 is the max among legal ids), got {chosen}"
+    assert chosen == 2, (
+        f"expected 2 (score 2.0 is the max among legal ids), got {chosen}"
+    )
     print("OK - picks the best-scoring token among only the legal ones")
 
 
@@ -50,8 +51,10 @@ def main() -> None:
     vocab_path = sdk.get_path_to_vocab_file()
     vocab = load_vocab(vocab_path)
     sets = TokenSets(vocab)
-    print(f"OK - vocab has {len(vocab)} tokens, {len(sets.digits)} digit tokens, "
-          f"{len(sets.string_body)} string-safe tokens")
+    print(
+        f"OK - vocab has {len(vocab)} tokens, {len(sets.digits)} digit tokens, "
+        f"{len(sets.string_body)} string-safe tokens"
+    )
 
     section("write_literal")
     ids: list[int] = sdk.encode("hello").tolist()[0]
@@ -63,7 +66,9 @@ def main() -> None:
     section("loading real function definitions")
     raw = load_json("./data/input/functions_definition.json")
     definitions = FunctionDefinitionList.model_validate(raw).root
-    print(f"OK - loaded {len(definitions)} functions: {[d.name for d in definitions]}")
+    print(
+        f"OK - loaded {len(definitions)} functions: {[d.name for d in definitions]}"
+    )
 
     section("build_function_trie")
     name_trie, name_to_def = build_function_trie(sdk, definitions)
@@ -74,13 +79,19 @@ def main() -> None:
     bool_trie = build_bool_trie(sdk)
     print("OK - bool trie built")
 
-    section("walk_trie (function selection) - not yet driven by a real prompt template")
+    section(
+        "walk_trie (function selection) - not yet driven by a real prompt template"
+    )
     prompt_ids: list[int] = sdk.encode(
         "What is the sum of 2 and 3?\nFunction:"
     ).tolist()[0]
     chosen_name = walk_trie(sdk, list(prompt_ids), name_trie)
-    assert chosen_name in name_to_def, f"{chosen_name!r} is not a known function name"
-    print(f"OK - model picked {chosen_name!r} (structurally valid; accuracy is prompts.py's job, not decoder.py's)")
+    assert chosen_name in name_to_def, (
+        f"{chosen_name!r} is not a known function name"
+    )
+    print(
+        f"OK - model picked {chosen_name!r} (structurally valid; accuracy is prompts.py's job, not decoder.py's)"
+    )
 
     # NOTE: gen_number/gen_string/gen_bool are primed here with small
     # hand-written few-shot contexts, not real prompts.py output (which
@@ -125,10 +136,36 @@ def main() -> None:
     assert isinstance(flag, bool)
     print(f"OK - generated bool: {flag}")
 
-    section("decode_function_call (pass 1 only - name selection, no parameters yet)")
-    call_ids = list(prompt_ids)
-    name, definition = decode_function_call(sdk, call_ids, name_trie, name_to_def)
-    print(f"OK - selected function {name!r}, definition params: {list(definition.parameters.keys())}")
+    section("gen_number - is a 'random number' prompt actually random?")
+    # masked_argmax always takes the single highest-scoring legal token, so
+    # decoding here is fully deterministic: the exact same prompt run twice
+    # must produce the exact same number both times. No dice-rolling
+    # anywhere in this pipeline - this demonstrates that directly.
+    random_prompt = 'Question: Generate a random number between 32.233 and -212333.2 and .\nAnswer: {"a": '
+    first_ids: list[int] = sdk.encode(random_prompt).tolist()[0]
+    second_ids: list[int] = sdk.encode(random_prompt).tolist()[0]
+    first_value = gen_number(sdk, first_ids, sets, vocab, is_last=True)
+    second_value = gen_number(sdk, second_ids, sets, vocab, is_last=True)
+    print(f"run 1: {first_value}, run 2: {second_value}")
+    assert first_value == second_value, (
+        "expected the same prompt to deterministically produce the same value"
+    )
+    print(
+        "OK - confirmed deterministic: identical prompt gives the identical 'random' number every time"
+    )
+
+    section("decode_function_call (full generation - name + parameters)")
+    call_prompt = (
+        "Question: What is the sum of 7 and 8?\n"
+        'Answer: {"name": "fn_add_numbers", "parameters": {"a": 7, "b": 8}}\n'
+        "Question: What is the sum of 2 and 3?\n"
+        "Answer: "
+    )
+    call_ids: list[int] = sdk.encode(call_prompt).tolist()[0]
+    name, params = decode_function_call(
+        sdk, call_ids, name_trie, name_to_def, sets, vocab, bool_trie
+    )
+    print(f"OK - selected function {name!r}, parameters: {params!r}")
 
     section("all checks passed")
 
