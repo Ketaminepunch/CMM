@@ -3,11 +3,7 @@ name = "call-me-maybe"
 version = "0.1.0"
 description = "Function calling for small LLMs via constrained decoding"
 requires-python = ">=3.10"
-dependencies = [
-    "pydantic>=2.0",
-    "numpy>=1.24",
-    "llm-sdk",
-]
+dependencies = ["pydantic>=2.0", "numpy>=1.24", "llm-sdk"]
 
 [tool.uv]
 package = false
@@ -17,10 +13,7 @@ llm-sdk = { path = "llm_sdk", editable = true }
 
 [tool.mypy]
 exclude = ["llm_sdk/", "tests/", "\\.venv/"]
-# Without this, the bare top-level `llm_sdk/` checkout (no __init__.py, since
-# it's excluded above rather than being real source) gets picked up as an
-# implicit namespace package and shadows the real `llm_sdk` installed
-# editable in .venv, making mypy think `llm_sdk` has no attributes.
+
 namespace_packages = false
 
 # llm_sdk is your own local sub-package with no py.typed marker, so mypy
@@ -32,3 +25,5 @@ ignore_missing_imports = true
 [tool.flake8]
 max-line-length = 100
 
+[tool.ruff]
+line-length = 79

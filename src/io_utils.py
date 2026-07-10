@@ -4,7 +4,7 @@ import sys
 from typing import Any
 
 
-def load_json(path: str) -> str:
+def load_json(path: str) -> Any:
     try:
         with open(path) as f:
             return json.load(f)
