@@ -1,3 +1,8 @@
+"""CLI entry point: load inputs, run the pipeline, save the results.
+
+Run with ``uv run python -m src`` (see the Makefile's ``run`` target).
+"""
+
 import argparse
 
 from pydantic import ValidationError
@@ -9,6 +14,7 @@ from .models import FunctionDefinitionList, PromptList
 
 
 def main() -> None:
+    """Parse CLI args, run the function-calling pipeline, save results."""
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--functions_definition",

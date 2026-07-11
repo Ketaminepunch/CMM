@@ -14,7 +14,7 @@ import json
 
 from llm_sdk import Small_LLM_Model
 
-from src.decoder import (
+from src.decoding import (
     TooManyTokens,
     build_bool_trie,
     build_function_trie,

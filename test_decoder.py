@@ -8,7 +8,7 @@ Run with: uv run python test_decoder.py
 """
 
 from llm_sdk import Small_LLM_Model
-from src.decoder import (
+from src.decoding import (
     build_bool_trie,
     build_function_trie,
     decode_function_call,
