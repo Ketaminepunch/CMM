@@ -34,7 +34,7 @@ class FunctionCallResult(BaseModel):
 
     prompt: str
     name: str
-    parameters: dict[str, str | float | bool]
+    parameters: dict[str, str | float | int | bool]
 
 
 class FunctionDefinitionList(RootModel[list[FunctionDefinition]]):

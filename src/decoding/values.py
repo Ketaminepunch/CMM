@@ -6,11 +6,18 @@ matching grammar, and to assemble a full ``{"name": ..., "parameters":
 {...}}`` function call one field at a time.
 """
 
+import json
+
 from llm_sdk import Small_LLM_Model
-from src.decoding.primitives import run_fsm, walk_trie, write_literal
+from src.decoding.primitives import (
+    masked_argmax,
+    run_fsm,
+    walk_trie,
+    write_literal,
+)
 from src.grammar import NumberFSM, StringFSM, TokenSets, Trie, build_trie
 from src.models import FunctionDefinition
-from src.tokenizer_vocab import decode_ids
+from src.tokenizer_vocab import decode_ids, token_to_bytes
 
 
 def build_function_trie(
@@ -70,11 +77,21 @@ def gen_string(
     """
     Generates a string from the given vocabulary.
     """
-    write_literal(sdk, ids, '"')
+    # Opening quote: let the model pick any token that starts with '"'
+    # (token healing) — whatever trails the quote begins the value.
+    scores = sdk.get_logits_from_input_ids(ids)
+    opener = masked_argmax(scores, sets.quote_openers)
+    ids.append(opener)
+    raw = token_to_bytes(vocab[opener])
+    prefix = raw[raw.index(b'"') + 1:].decode("utf-8")
     string_terminator = "}" if is_last else ","
     fsm = StringFSM(sets)
     sliced = run_fsm(sdk, ids, fsm)[:-1]
-    decoded = decode_ids(sliced, vocab)
+    # The closer may also be merged (e.g. '",'); keep the context a
+    # cleanly closed string before the decoder writes what follows.
+    ids[-1] = sets.quote
+    decoded = prefix + decode_ids(sliced, vocab)
+    decoded = json.loads('"' + decoded + '"').removeprefix(" ")
     write_literal(sdk, ids, string_terminator)
     return decoded
 
@@ -99,20 +116,25 @@ def decode_function_call(
     sets: TokenSets,
     vocab: dict[int, str],
     bool_trie: Trie,
-) -> tuple[str, dict[str, str | float | bool]]:
+) -> tuple[str, dict[str, str | float | int | bool]]:
     """Decode a function call from a sequence of tokens."""
     write_literal(sdk, ids, '{"name": "')
     trie_result = walk_trie(sdk, ids, name_tries)
     write_literal(sdk, ids, '", "parameters": {')
     func_defn = name_to_def[trie_result]
     defn_lst = list(func_defn.parameters.items())
-    params: dict[str, str | float | bool] = {}
+    params: dict[str, str | float | int | bool] = {}
     for i, (key, schema) in enumerate(defn_lst):
         if i == len(defn_lst) - 1:
             is_last = True
         else:
             is_last = False
-        write_literal(sdk, ids, f'"{key}": ')
+        # Strings get no trailing space: the opener token supplies
+        # it (' "'), keeping the space+quote boundary natural.
+        if schema.type == "string":
+            write_literal(sdk, ids, f'"{key}":')
+        else:
+            write_literal(sdk, ids, f'"{key}": ')
         match schema.type:
             case "number":
                 params[key] = gen_number(sdk, ids, sets, vocab, is_last)
@@ -120,6 +142,8 @@ def decode_function_call(
                 params[key] = gen_string(sdk, ids, sets, vocab, is_last)
             case "boolean":
                 params[key] = gen_bool(sdk, ids, bool_trie, is_last)
+            case "integer":
+                params[key] = int(gen_number(sdk, ids, sets, vocab, is_last))
             case _:
                 raise ValueError(f"Unsupported parameter type: {schema.type}")
     if len(defn_lst) == 0:

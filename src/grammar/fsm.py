@@ -102,11 +102,11 @@ class StringFSM:
         """Token ids that are legal to generate in the current state."""
         if self._count >= self._max:
             return [self._sets.quote]
-        return self._sets.string_body + [self._sets.quote]
+        return self._sets.string_body + self._sets.quote_starts
 
     def advance(self, token_id: int) -> None:
         """Update the state after ``token_id`` has been generated."""
-        if token_id == self._sets.quote:
+        if token_id in self._sets.quote_starts_set:
             self.done = True
         else:
             self._count += 1

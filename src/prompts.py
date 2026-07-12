@@ -30,11 +30,21 @@ def build_few_shot_examples() -> str:
     return (
         "Question: What is 12 plus 5?\n"
         'Answer: {"name": "demo_add", "parameters": {"x": 12, "y": 5}}\n\n'
-        "Question: Say hello to Alex.\n"
-        'Answer: {"name": "demo_greet", "parameters": {"person": "Alex"}}\n\n'
         "Question: Is 10 greater than 3?\n"
         'Answer: {"name": "demo_compare", "parameters": '
         '{"first": 10, "second": 3, "strict": true}}\n\n'
+        "Question: Run the query 'DELETE FROM tmp' on the staging database\n"
+        'Answer: {"name": "demo_run_query", "parameters": '
+        '{"query": "DELETE FROM tmp", "database": "staging"}}\n\n'
+        "Question: Read the file at /var/log/app.log with ascii encoding\n"
+        'Answer: {"name": "demo_read_file", "parameters": '
+        '{"path": "/var/log/app.log", "encoding": "ascii"}}\n\n'
+        "Question: Read D:\\Backup\\notes.txt with ascii encoding\n"
+        'Answer: {"name": "demo_read_file", "parameters": '
+        '{"path": "D:\\\\Backup\\\\notes.txt", "encoding": "ascii"}}\n\n'
+        'Question: Format template: Reply "yes" to {sender} now!\n'
+        'Answer: {"name": "demo_format", "parameters": '
+        '{"template": "Reply \\"yes\\" to {sender} now!"}}\n\n'
     )
 
 

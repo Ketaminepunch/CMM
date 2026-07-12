@@ -7,3 +7,6 @@ __pycache__/
 data/output/
 .DS_Store
 CLAUDE.md
+FIXES.md
+moulinette/
+moulinette.zip
