@@ -36,4 +36,4 @@ def save_json(
     """
     os.makedirs(os.path.dirname(path), exist_ok=True)
     with open(path, "w") as f:
-        json.dump(data, f)
+        json.dump(data, f, indent=2)
